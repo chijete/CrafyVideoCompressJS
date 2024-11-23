@@ -14,6 +14,18 @@
 <body>
 
   <p><b>Input video:</b></p>
+  <div>
+    <span>Start time:</span>
+    <input type="number" placeholder="Seconds" id="start_time_input" oninput="updateInputConfigs();">
+  </div>
+  <div>
+    <span>End time:</span>
+    <input type="number" placeholder="Seconds" id="end_time_input" oninput="updateInputConfigs();">
+  </div>
+  <div>
+    <span>Max bitrate:</span>
+    <input type="number" placeholder="Bitrate" id="max_bitrate_input" oninput="updateInputConfigs();">
+  </div>
   <input type="file" onchange="onInputFileChange(event.target.files[0])" accept="video/mp4"></input>
 
   <p id="progress_text"></p>
@@ -37,14 +49,38 @@
       }
     };
 
+    var startTime = false;
+    var endTime = false;
+    var maxBitrate = false;
+    var start_time_input = document.getElementById('start_time_input');
+    var end_time_input = document.getElementById('end_time_input');
+    var max_bitrate_input = document.getElementById('max_bitrate_input');
+    function updateInputConfigs() {
+      if (parseInt(start_time_input.value) > 0) {
+        startTime = start_time_input.value * 1000000;
+      } else {
+        startTime = false;
+      }
+      if (parseInt(end_time_input.value) > 0) {
+        endTime = end_time_input.value * 1000000;
+      } else {
+        endTime = false;
+      }
+      if (parseInt(max_bitrate_input.value) > 0) {
+        maxBitrate = max_bitrate_input.value;
+      } else {
+        maxBitrate = false;
+      }
+    }
+
     function onInputFileChange(file) {
       var reader = new FileReader();
       reader.onload = async function() {
         CrafyVideoCompressJS_instance.processVideo(
           this.result,
-          5 * 1000000,
-          false,
-          100_000
+          startTime,
+          endTime,
+          maxBitrate
         )
           .then((result) => {
             console.log('Result:', result);
@@ -63,6 +99,9 @@
       reader.readAsArrayBuffer(file);
     }
   </script>
+
+  <p>Github repository: <a href="https://github.com/chijete/CrafyVideoCompressJS">https://github.com/chijete/CrafyVideoCompressJS</a></p>
+  <p>Made with 💙 by <a href="https://chijete.com/">Crafy Holding</a>.</p>
   
 </body>
 </html>
