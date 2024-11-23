@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="CrafyVideoCompressJS.js"></script>
+  <style>
+    video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <p><b>Input video:</b></p>
+  <input type="file" onchange="onInputFileChange(event.target.files[0])" accept="video/mp4"></input>
+
+  <p id="progress_text"></p>
+
+  <p><b>Output video:</b></p>
+  <video src="" id="output_video" controls></video>
+
+  <script>
+    var CrafyVideoCompressJS_instance = new CrafyVideoCompressJS();
+    CrafyVideoCompressJS_instance.onProgress = function (progressData) {
+      document.getElementById('progress_text').innerText = '';
+      if (progressData['video']) {
+        document.getElementById('progress_text').innerText += `
+          Video: `+progressData['video']['decoding']['percentage']+`% decoded, `+progressData['video']['encoding']['percentage']+`% encoded.
+        `;
+      }
+      if (progressData['audio']) {
+        document.getElementById('progress_text').innerText += `
+          Audio: `+progressData['audio']['decoding']['percentage']+`% decoded, `+progressData['audio']['encoding']['percentage']+`% encoded.
+        `;
+      }
+    };
+
+    function onInputFileChange(file) {
+      var reader = new FileReader();
+      reader.onload = async function() {
+        CrafyVideoCompressJS_instance.processVideo(
+          this.result,
+          5 * 1000000,
+          false,
+          100_000
+        )
+          .then((result) => {
+            console.log('Result:', result);
+            document.getElementById('progress_text').innerText = 'Completed in ' + result['reencoding_time_seconds'] + ' seconds. ';
+            if (result['reencoding_video_fps']) {
+              document.getElementById('progress_text').innerText += 'Video processing: ' + result['reencoding_video_fps'] + ' fps. ';
+            }
+            if (result['reencoding_audio_fps']) {
+              document.getElementById('progress_text').innerText += 'Audio processing: ' + result['reencoding_audio_fps'] + ' fps. ';
+            }
+            document.getElementById('output_video').src = URL.createObjectURL(new Blob([result['video_array_buffer']], { type: "video/mp4" }));
+          }).catch((error) => {
+            console.error(error);
+          });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+  
+</body>
+</html>
